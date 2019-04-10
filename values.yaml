@@ -1,0 +1,81 @@
+# Default values for shared chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+fullnameOverride: captureorder
+image:
+  repository: njeacr.azurecr.io/captureorder
+  tag: # Will be set at command runtime
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+  # Optionally specify an array of imagePullSecrets.
+  # Secrets must be manually created in the namespace.
+  # ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  #
+  # This uses credentials from secret "myRegistryKeySecretName".
+  # - name: myRegistryKeySecretName
+containerPort:
+  name: http
+  containerPort: 80
+  protocol: TCP
+  
+env:
+  TEAMNAME: azch-team
+  MONGOHOST: "orders-mongo-mongodb.default.svc.cluster.local"
+  MONGOUSER: "orders-user"
+  MONGOPASSWORD: ""
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+  protocol: TCP
+  portName: http
+
+hpa:
+  enable: true
+  minReplicaCount: 1
+  maxReplicaCount: 15
+  targetCPUUtilizationPercentage: 50
+
+probes:
+  enabled: false
+  livenessProbe:
+    path: /healthz
+    port: 8080
+  readinessProbe:
+    path: 8080
+    port: /healthz
+
+flexVol:
+  enabled: true
+  keyVaultName: "kv-aks-eastus" # Will be set at command runtime; Name of keyvault containing mongo password secret
+  keyVaultSecretName: "mongo-password" # Will be set at command runtime; Name of secret container mongo password
+  keyVaultResourceGroup: "rg-keyvault" # Will be set at command runtime; Name of resource group containing keyvault
+  subscriptionId: "9c9160cb-230a-415a-b662-096ae69cd32f" # Will be set at command runtime; target subscription id 
+  tenantId: "72f988bf-86f1-41af-91ab-2d7cd011db47" # Will be set at command runtime; tenant ID of subscription 
+
+ingress:
+  enabled: false
+  annotations:
+    kubernetes.io/ingress.class: addon-http-application-routing
+    # kubernetes.io/tls-acme: "true"
+  path: /
+  # hosts:
+  #   - chart-example.local
+  tls: []
+    # - secretName: chart-example-tls
+    #   hosts:
+    #     - chart-example.local
+resources: 
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
